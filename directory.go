@@ -67,7 +67,7 @@ func getContactHandler(w http.ResponseWriter, req *http.Request) {
 func getDirectoryHandler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(directory)
+	json.NewEncoder(w).Encode(directory.List)
 }
 
 func createContactHandler(w http.ResponseWriter, req *http.Request) {
