@@ -72,7 +72,7 @@ func TestGetContact(t *testing.T) {
 		t.Error(err) //Failed to decode the response
 	}
 
-	if contact.Equal(expContact) {
+	if !contact.Equal(expContact) {
 		t.Errorf("Response returned incorrect contact information. Expected %v, received %v",
 			expContact, contact)
 	}

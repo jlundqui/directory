@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	// "strings"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	// "logging"
@@ -22,12 +23,18 @@ type Contact struct {
 	Phone     string `json:"phone,omitempty"`
 }
 
+// Directory contains the constacts list and tracks the latest ID value.
+type Directory struct {
+	LastIDValue int
+	List        []Contact
+}
+
 // var directoryJSON = `{"id": "1",  "firstname": "Ann", "lastname": "Adams",
 // 	 "email": "aadams@fakemail.net", "phone": "123-456-7890"},
 // 	 {"id": "2", "firstname": "Brenda", "lastname": "Bowman",
 // 		 "email": "bbowman@fakemail.net", "phone": "123-890-4567"}`
 
-var directory []Contact
+var directory Directory
 
 // Equal compares contacts for equality.
 func (c Contact) Equal(contact Contact) bool {
@@ -47,7 +54,7 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 
 func getContactHandler(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
-	for _, contact := range directory {
+	for _, contact := range directory.List {
 		if contact.ID == params["id"] {
 			json.NewEncoder(w).Encode(contact)
 			return
@@ -64,23 +71,19 @@ func getDirectoryHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func createContactHandler(w http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
 	var contact Contact
 	_ = json.NewDecoder(req.Body).Decode(&contact)
-	contact.ID = params["id"]
-	contact.Firstname = params["firstname"]
-	contact.Lastname = params["lastname"]
-	contact.Email = params["email"]
-	contact.Phone = params["phone"]
-	directory = append(directory, contact)
+	directory.LastIDValue++
+	contact.ID = strconv.Itoa(directory.LastIDValue)
+	directory.List = append(directory.List, contact)
 	json.NewEncoder(w).Encode(directory)
 }
 
 func deleteContactHandler(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
-	for index, contact := range directory {
+	for index, contact := range directory.List {
 		if contact.ID == params["id"] {
-			directory = append(directory[:index], directory[index+1:]...)
+			directory.List = append(directory.List[:index], directory.List[index+1:]...)
 			break
 		}
 	}
@@ -103,9 +106,10 @@ func Handlers() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	// directory = append(directory, Contact{ID: 1, Firstname: "Ann", Lastname: "Adams", Email: "aadams@fakemail.net"})
 	// directory = append(directory, Contact{ID: 2, Firstname: "Brenda", Lastname: "Bowman"})
-	directory = append(directory, Contact{ID: "1", Firstname: "Ann", Lastname: "Adams",
+	directory.LastIDValue = 2
+	directory.List = append(directory.List, Contact{ID: "1", Firstname: "Ann", Lastname: "Adams",
 		Email: "aadams@fakemail.net", Phone: "123-456-7890"})
-	directory = append(directory, Contact{ID: "2", Firstname: "Brenda", Lastname: "Bowman",
+	directory.List = append(directory.List, Contact{ID: "2", Firstname: "Brenda", Lastname: "Bowman",
 		Email: "bbowman@fakemail.net", Phone: "123-890-4567"})
 	router.HandleFunc("/", indexHandler)
 	router.HandleFunc("/directory", getDirectoryHandler).Methods("GET")
