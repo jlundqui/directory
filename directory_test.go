@@ -25,6 +25,7 @@ func init() {
 }
 
 func TestGetDirectory(t *testing.T) {
+	//create request
 	request, err := http.NewRequest("GET", directoryURL, nil)
 	response, err := http.DefaultClient.Do(request)
 
@@ -34,6 +35,7 @@ func TestGetDirectory(t *testing.T) {
 		return
 	}
 
+	//create expected contacts list
 	var expContactList []Contact
 	expContactList = append(expContactList, Contact{ID: "1", Firstname: "Ann", Lastname: "Adams",
 		Email: "aadams@fakemail.net", Phone: "123-456-7890"})
@@ -41,18 +43,21 @@ func TestGetDirectory(t *testing.T) {
 		Email: "bbowman@fakemail.net", Phone: "123-890-4567"})
 	numExpContacts := len(expContactList)
 
+	//decode conact list response
 	var contactList []Contact
 	err = json.NewDecoder(response.Body).Decode(&contactList)
 	if err != nil {
 		t.Error(err) //Failed to decode the response
 	}
 
+	//test number of contacts
 	numContacts := len(contactList)
-	if len(contactList) != len(expContactList) {
+	if numContacts != numExpContacts {
 		t.Errorf("Number of contacts, %v, received differs from expected, %v.",
 			numContacts, numExpContacts)
 	}
 
+	//test that the contacts are the same
 	for i := 0; i < numContacts; i++ {
 		if !contactList[i].Equal(expContactList[i]) {
 			t.Errorf("Response returned incorrect contact info. Received %v, expected %v.",
@@ -79,16 +84,19 @@ func TestGetContact(t *testing.T) {
 	var contact Contact
 	err = json.NewDecoder(response.Body).Decode(&contact)
 	if err != nil {
-		t.Error(err) //Failed to decode the response
+		// failed to decode the response
+		t.Error(err)
 	}
 
 	if !contact.Equal(expContact) {
+		//response contact data incorrect
 		t.Errorf("Response returned incorrect contact information. Expected %v, received %v",
 			expContact, contact)
 	}
 }
 
 func TestCreateContact(t *testing.T) {
+	//contact json for testing
 	contactJSON := `{"firstname": "Jane", "lastname": "Jones",
 	 "email": "jjones@doesnotexist.org", "phone": "987-645-3210"}`
 
@@ -131,34 +139,4 @@ func TestDeleteContact(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
 }
-
-//
-// func TestIndexHandler(t *testing.T) {
-// 	req, err := http.NewRequest("GET", "/health-check", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-//
-// 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-// 	rr := httptest.NewRecorder()
-// 	handler := http.HandlerFunc(HealthCheckHandler)
-//
-// 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-// 	// directly and pass in our Request and ResponseRecorder.
-// 	handler.ServeHTTP(rr, req)
-//
-// 	// Check the status code is what we expect.
-// 	if status := rr.Code; status != http.StatusOK {
-// 		t.Errorf("handler returned wrong status code: got %v want %v",
-// 			status, http.StatusOK)
-// 	}
-//
-// 	// Check the response body is what we expect.
-// 	expected := `{"alive": true}`
-// 	if rr.Body.String() != expected {
-// 		t.Errorf("handler returned unexpected body: got %v want %v",
-// 			rr.Body.String(), expected)
-// 	}
-// }
